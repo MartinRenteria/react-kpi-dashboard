@@ -1,4 +1,4 @@
-import { drizzle } from 'drizzle-orm/pg-core';
+import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
 import * as schema from './schema';
 
@@ -11,4 +11,4 @@ const pool = globalForDb.conn ?? new Pool({
 
 if (process.env.NODE_ENV !== 'production') globalForDb.conn = pool;
 
-export const db = drizzle(pool, { schema });
+export const db = drizzle({ client: pool, schema });

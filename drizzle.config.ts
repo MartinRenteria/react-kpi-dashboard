@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv';
 // Load environmental variables from your local env
 dotenv.config({ path: '.env.local' });
 
-export default defineConfig({
+const config = defineConfig({
     schema: './src/db/schema.ts',
     out: './drizzle',
     dialect: 'postgresql',
@@ -12,3 +12,5 @@ export default defineConfig({
         url: process.env.DATABASE_URL!,
     },
 });
+
+export default config;
