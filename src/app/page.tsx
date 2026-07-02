@@ -7,7 +7,7 @@ import { desc } from 'drizzle-orm';
 export const dynamic = 'force-dynamic';
 
 export default async function DashboardPage() {
-  let allMetrics = [];
+  let allMetrics: any[] = [];
   let connectionError = null;
 
   try {
@@ -57,9 +57,6 @@ export default async function DashboardPage() {
                   ✓
                 </div>
                 <h3 className="text-lg font-medium text-slate-200">Connected to Database!</h3>
-                <p className="text-slate-500 text-sm max-w-sm mt-1">
-                  Your pipeline is live, but your <code className="text-slate-400 font-mono">metrics</code> table is currently empty. Next, we will build a Server Action to populate it.
-                </p>
               </div>
             ) : (
               /* Populated Cards State */
