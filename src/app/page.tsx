@@ -1,6 +1,7 @@
 import { db } from '@/db';
 import { metrics } from '@/db/schema';
 import { desc } from 'drizzle-orm';
+import { MetricForm } from '@/components/MetricForm';
 
 // This forces Next.js to run this page dynamically on every request 
 // instead of caching a blank page during your initial build.
@@ -32,11 +33,7 @@ export default async function DashboardPage() {
               Full-stack React 19 Server Architecture
             </p>
           </div>
-
-          {/* Placeholder button for our future Form Action Modal */}
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-sm font-semibold shadow-lg shadow-blue-500/20 transition-all active:scale-95">
-            + Add Metric
-          </button>
+          <MetricForm />
         </header>
 
         {/* Database Connection Error Callout */}
