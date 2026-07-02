@@ -1,19 +1,28 @@
-'use client'; // This component has interactivity, so it's a Client Component
+'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { useFormStatus } from 'react-dom';
 import { createMetric } from '@/actions/metrics';
+import { useUIStore } from '@/store/useUIStore';
 
 export function MetricForm() {
-    // useActionState takes: (yourActionFunction, initialFormState)
-    // It returns: [currentServerState, formActionTriggerWrapper, isPendingBoolean]
-    const [state, formAction, isPending] = useActionState(createMetric, null);
+    const [state, formAction] = useActionState(createMetric, null);
+
+    // Extract the close function from our global UI state
+    const closeForm = useUIStore((state) => state.closeForm);
+
+    // The Success Watcher Logic
+    useEffect(() => {
+        // If the server action returns a payload saying success is true, shut the drawer!
+        if (state?.success) {
+            closeForm();
+        }
+    }, [state, closeForm]); // Re-run this effect only when the server 'state' updates
 
     return (
         <form action={formAction} className="space-y-4 p-6 border border-slate-800 bg-slate-900 rounded-2xl w-full max-w-sm">
             <h3 className="text-lg font-bold text-slate-100 mb-2">Track New KPI</h3>
 
-            {/* Global Error Notice */}
             {state?.errors?.global && (
                 <p className="text-sm text-red-400 bg-red-950/30 p-2 rounded border border-red-900">{state.errors.global}</p>
             )}
@@ -63,13 +72,11 @@ export function MetricForm() {
                 {state?.errors?.category && <p className="text-xs text-red-400 mt-1">{state.errors.category[0]}</p>}
             </div>
 
-            {/* Embedded Submitting Button */}
             <SubmitButton />
         </form>
     );
 }
 
-// Mini sub-component using useFormStatus to seamlessly track pending states from form context
 function SubmitButton() {
     const { pending } = useFormStatus();
 
