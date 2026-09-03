@@ -1,0 +1,84 @@
+name: CI/CD Platform Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+# Required permissions for secure AWS OIDC token exchange
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  quality-and-a11y:
+    name: Code Quality & Accessibility Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-cache: 'npm'
+          node-version: '20'
+
+      - name: Install Project Dependencies
+        run: npm ci
+
+      - name: Enforce Code Style & Types
+        run: |
+          npm run lint
+          npx tsc --noEmit
+
+      - name: Install Playwright Headless Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Execute Live Accessibility Compliance Verification
+        run: |
+          # Build application and start local standalone server in background
+          npm run build
+          npm run start &
+          
+          # Wait up to 10 seconds for port 3000 to become responsive
+          # If you haven't installed 'wait-on' yet, we can fall back to a quick sleep
+          sleep 5
+          
+          # Trigger headless a11y testing suite
+          npx playwright test tests/accessibility.spec.ts
+
+  build-and-push-registry:
+    name: Amazon ECR Container Push
+    runs-on: ubuntu-latest
+    needs: quality-and-a11y
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to AWS via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-deploy-role
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Authenticate to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compile and Push Standalone Container Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/react-kpi-dashboard:latest
+            ${{ steps.login-ecr.outputs.registry }}/react-kpi-dashboard:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
