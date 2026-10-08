@@ -38,16 +38,19 @@ jobs:
 
       - name: Execute Live Accessibility Compliance Verification
         run: |
-          # Build application and start local standalone server in background
           npm run build
-          npm run start &
-          
-          # Wait up to 10 seconds for port 3000 to become responsive
-          # If you haven't installed 'wait-on' yet, we can fall back to a quick sleep
+          node .next/standalone/server.js &
           sleep 5
-          
-          # Trigger headless a11y testing suite
-          npx playwright test tests/accessibility.spec.ts
+          npx playwright test tests/accessibility.spec.ts --reporter=html
+
+      - name: Upload Accessibility Report Artifact
+      # Uploads report whether accessibility tests pass or fail
+        if: always() 
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-accessibility-report
+          path: playwright-report/
+          retention-days: 14
 
   build-and-push-registry:
     name: Amazon ECR Container Push
