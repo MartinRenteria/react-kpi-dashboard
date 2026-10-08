@@ -1,13 +1,16 @@
 import { db } from '@/db';
 import { metrics } from '@/db/schema';
-import { desc } from 'drizzle-orm';
+import { desc, type InferSelectModel } from 'drizzle-orm';
 import { NewMetricButton } from '@/components/NewMetricButton';
 import { FormDrawer } from '@/components/FormDrawer';
 
 export const dynamic = 'force-dynamic';
 
+// Type representing a single record returned from the metrics table
+type Metric = InferSelectModel<typeof metrics>;
+
 export default async function DashboardPage() {
-  let allMetrics: any[] = [];
+  let allMetrics: Metric[] = [];
   let connectionError = null;
 
   try {
